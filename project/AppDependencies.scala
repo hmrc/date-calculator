@@ -18,4 +18,8 @@ object AppDependencies {
     "uk.gov.hmrc" %% "bootstrap-test-play-28" % bootstrapVersion % "test, it"
   // format: ON
   )
+
+  // only add additional dependencies here - it test inherit test dependencies above already
+  val itDependencies: Seq[ModuleID] = Seq()
+
 }

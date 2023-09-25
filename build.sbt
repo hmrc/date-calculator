@@ -1,3 +1,8 @@
+import uk.gov.hmrc.DefaultBuildSettings
+
+ThisBuild / majorVersion := 0
+ThisBuild / scalaVersion := "2.13.8"
+
 lazy val scalaCompilerOptions = Seq(
     "-Xfatal-warnings",
     "-Xlint:-missing-interpolator,_",
@@ -32,3 +37,9 @@ lazy val microservice = Project("date-calculator", file("."))
   .configs(IntegrationTest)
   .settings(resolvers += Resolver.jcenterRepo)
   .settings(CodeCoverageSettings.settings: _*)
+
+lazy val it = project
+  .enablePlugins(PlayScala)
+  .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
+  .settings(DefaultBuildSettings.itSettings)
+  .settings(libraryDependencies ++= AppDependencies.itDependencies)
