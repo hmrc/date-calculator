@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.datecalculator.controllers
+package uk.gov.hmrc.datecalculator.services
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-import play.api.http.Status
-import play.api.test.Helpers._
-import play.api.test.{FakeRequest, Helpers}
+import com.google.inject.Singleton
+import uk.gov.hmrc.datecalculator.models.AddWorkingDaysRequest
 
-class MicroserviceHelloWorldControllerSpec extends AnyWordSpec with Matchers {
+import java.time.LocalDate
 
-  private val fakeRequest = FakeRequest("GET", "/")
-  private val controller = new MicroserviceHelloWorldController(Helpers.stubControllerComponents())
+@Singleton
+class WorkingDaysService {
 
-  "GET /" should {
-    "return 200" in {
-      val result = controller.hello()(fakeRequest)
-      status(result) shouldBe Status.OK
-    }
+  def addWorkingDays(request: AddWorkingDaysRequest): LocalDate = {
+    val result =
+      if (request.numberOfWorkingDaysToAdd < 0)
+        request.date.minusDays(request.numberOfWorkingDaysToAdd.abs)
+      else
+        request.date.plusDays(request.numberOfWorkingDaysToAdd)
+
+    result
   }
+
 }
