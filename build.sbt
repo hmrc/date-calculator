@@ -29,7 +29,8 @@ lazy val microservice = Project("date-calculator", file("."))
     // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
     // suppress warnings in generated routes files
     scalacOptions += "-Wconf:src=routes/.*:s",
-    PlayKeys.playDefaultPort := 8762
+    PlayKeys.playDefaultPort := 8762,
+    Compile / doc / scalacOptions := Seq() //this will allow to have warnings in `doc` task and not fail the build
   )
   .settings(WartRemoverSettings.wartRemoverSettings)
   .settings(ScalariformSettings.scalariformSettings: _*)
