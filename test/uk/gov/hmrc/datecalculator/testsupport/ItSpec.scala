@@ -33,10 +33,7 @@ trait ItSpec
 
   val testServerPort: Int = 19001
 
-  val databaseName: String = "payments-email-verification-it"
-
   def conf: Map[String, Any] = Map(
-    "mongodb.uri" -> s"mongodb://localhost:27017/$databaseName",
     "auditing.enabled" -> false,
     "auditing.traceRequests" -> false
   )
