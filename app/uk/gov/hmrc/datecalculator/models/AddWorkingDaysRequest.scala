@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.datecalculator.controllers
+package uk.gov.hmrc.datecalculator.models
 
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import play.api.libs.json.{Json, Reads}
 
-@Singleton()
-class MicroserviceHelloWorldController @Inject() (cc: ControllerComponents)
-  extends BackendController(cc) {
+import java.time.LocalDate
 
-  def hello(): Action[AnyContent] = Action.async { _ =>
-    Future.successful(Ok("Hello world"))
-  }
+final case class AddWorkingDaysRequest(
+    date:                     LocalDate,
+    numberOfWorkingDaysToAdd: Int
+)
+
+object AddWorkingDaysRequest {
+
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
+  implicit val reads: Reads[AddWorkingDaysRequest] = Json.reads
+
 }
