@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.datecalculator.config
+package uk.gov.hmrc.datecalculator.models
 
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
+import java.time.LocalDate
 
-@Singleton
-class AppConfig @Inject() (config: Configuration) {
+final case class BankHoliday(date: LocalDate)
 
-  val bankHolidaysApiUrl: String = config.get[String]("bank-holiday-api.url")
+object BankHoliday {
 
-  val bankHolidaysApiFromEmailAddress: String = config.get[String]("bank-holiday-api.from-email-address")
+  implicit val ordering: Ordering[BankHoliday] = Ordering.by(_.date)
 
 }

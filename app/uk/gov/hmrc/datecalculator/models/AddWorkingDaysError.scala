@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.datecalculator.config
+package uk.gov.hmrc.datecalculator.models
 
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
+sealed trait AddWorkingDaysError
 
-@Singleton
-class AppConfig @Inject() (config: Configuration) {
+object AddWorkingDaysError {
 
-  val bankHolidaysApiUrl: String = config.get[String]("bank-holiday-api.url")
+  case object CalculationBeyondKnownBankHolidays extends AddWorkingDaysError
 
-  val bankHolidaysApiFromEmailAddress: String = config.get[String]("bank-holiday-api.from-email-address")
+  case object NoRegionsInRequest extends AddWorkingDaysError
 
 }
