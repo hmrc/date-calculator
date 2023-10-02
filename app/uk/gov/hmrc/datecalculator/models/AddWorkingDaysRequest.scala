@@ -16,16 +16,26 @@
 
 package uk.gov.hmrc.datecalculator.models
 
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.json.{JsError, JsString, JsSuccess, Json, Reads}
 
 import java.time.LocalDate
 
 final case class AddWorkingDaysRequest(
     date:                     LocalDate,
-    numberOfWorkingDaysToAdd: Int
+    numberOfWorkingDaysToAdd: Int,
+    regions:                  Set[Region]
 )
 
 object AddWorkingDaysRequest {
+
+  implicit val regionReads: Reads[Region] =
+    Reads{
+      case JsString("EW")  => JsSuccess(Region.EnglandAndWales)
+      case JsString("SC")  => JsSuccess(Region.Scotland)
+      case JsString("NI")  => JsSuccess(Region.NorthernIreland)
+      case JsString(other) => JsError(s"Could not read unknown region: $other")
+      case other           => JsError(s"Expected JsString for region but got ${other.getClass.getSimpleName}")
+    }
 
   @SuppressWarnings(Array("org.wartremover.warts.Any"))
   implicit val reads: Reads[AddWorkingDaysRequest] = Json.reads
