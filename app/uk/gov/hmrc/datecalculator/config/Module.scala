@@ -16,12 +16,28 @@
 
 package uk.gov.hmrc.datecalculator.config
 
-import com.google.inject.AbstractModule
+import akka.actor.{ActorSystem, Scheduler}
+import com.google.inject.{AbstractModule, Provides, Singleton}
+import uk.gov.hmrc.datecalculator.services.WorkingDaysService
 
+import java.time.{Clock, ZoneId}
 class Module extends AbstractModule {
 
   override def configure(): Unit = {
-
     bind(classOf[AppConfig]).asEagerSingleton()
+    bind(classOf[WorkingDaysService]).asEagerSingleton()
   }
+
+  @Provides
+  @Singleton
+  def clock(): Clock = Clock.system(ZoneId.of("Europe/London"))
+
+  @Provides
+  @Singleton
+  def scheduler(actorSystem: ActorSystem): Scheduler = actorSystem.scheduler
+
+  @Provides
+  @Singleton
+  def workingDaysServiceStartUpHook: WorkingDaysService.StartUpHook = WorkingDaysService.StartUpHook(() => ())
+
 }

@@ -16,23 +16,84 @@
 
 package uk.gov.hmrc.datecalculator.services
 
+import akka.actor.{Cancellable, Scheduler}
 import cats.syntax.eq._
 import com.google.inject.{Inject, Singleton}
+import play.api.Logger
+import play.api.inject.ApplicationLifecycle
+import uk.gov.hmrc.datecalculator.config.AppConfig
 import uk.gov.hmrc.datecalculator.models.{AddWorkingDaysError, AddWorkingDaysRequest, BankHoliday, BankHolidays, Region}
+import uk.gov.hmrc.datecalculator.services.WorkingDaysService.StartUpHook
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.LocalDate
+import java.time.{Clock, LocalDate, LocalTime}
 import java.time.temporal.ChronoField
 import java.util.concurrent.atomic.AtomicReference
 import scala.annotation.tailrec
+import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 @Singleton
-class WorkingDaysService @Inject() (bankHolidaysService: BankHolidaysService)(implicit ec: ExecutionContext) {
+class WorkingDaysService @Inject() (
+    appConfig:            AppConfig,
+    bankHolidaysService:  BankHolidaysService,
+    scheduler:            Scheduler,
+    clock:                Clock,
+    startUpHook:          StartUpHook,
+    applicationLifecycle: ApplicationLifecycle
+)(implicit ec: ExecutionContext) {
 
   import WorkingDaysService.LocalDateOps
 
+  private val logger: Logger = Logger(this.getClass)
+
+  private val twentyFourHoursInSeconds: Long = 24.hours.toSeconds
+
   private val maybeBankHolidays: AtomicReference[Option[BankHolidays]] = new AtomicReference(None)
+
+  private val bankHolidaysDailyRefreshJob: Cancellable = {
+    val timeUntilNextRefresh = timeUntil(appConfig.dailyRefreshTime)
+
+    val timeString = {
+      val hours = timeUntilNextRefresh.toHours
+      val minutes = (timeUntilNextRefresh - hours.hours).toMinutes
+      val seconds = (timeUntilNextRefresh - hours.hours - minutes.minutes).toSeconds
+      s"${hours.toString}h${minutes.toString}m${seconds.toString}s"
+    }
+    logger.info(s"Scheduling next bank holidays daily refresh for ${appConfig.dailyRefreshTime.toString} in $timeString")
+
+    scheduler.scheduleWithFixedDelay(
+      timeUntilNextRefresh,
+      24.hours
+    )(new Runnable {
+        override def run(): Unit =
+          getAndSetBankHolidays()(HeaderCarrier()).onComplete {
+            case Failure(e) => logger.warn(s"Could not refresh bank holidays", e)
+            case Success(_) => logger.info(s"Successfully refreshed bank holidays")
+          }
+      })
+  }
+
+  private def timeUntil(t: LocalTime): FiniteDuration = {
+    val now = LocalTime.now(clock)
+
+    val seconds = {
+      val delta = now.until(t, java.time.temporal.ChronoUnit.SECONDS)
+      if (delta < 0) {
+        twentyFourHoursInSeconds + delta
+      } else {
+        delta
+      }
+    }
+
+    seconds.seconds
+  }
+
+  startUpHook.onStart()
+
+  applicationLifecycle.addStopHook(() => Future.successful(bankHolidaysDailyRefreshJob.cancel()))
 
   def addWorkingDays(request: AddWorkingDaysRequest)(implicit hc: HeaderCarrier): Future[Either[AddWorkingDaysError, LocalDate]] =
     if (request.regions.isEmpty)
@@ -122,5 +183,7 @@ object WorkingDaysService {
     def isAfterOrEqualTo(other: LocalDate): Boolean = d.isAfter(other) || d.isEqual(other)
 
   }
+
+  final case class StartUpHook(onStart: () => Unit)
 
 }

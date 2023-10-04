@@ -19,6 +19,10 @@ package uk.gov.hmrc.datecalculator.testsupport.stubs
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, equalTo, exactly, get, getRequestedFor, stubFor, urlPathEqualTo, verify}
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.UUID
+
 object GDSStub {
 
   type HttpStatus = Int
@@ -43,5 +47,38 @@ object GDSStub {
 
   def verifyGetBankHolidaysNotCalled(url: String): Unit =
     verify(exactly(0), getRequestedFor(urlPathEqualTo(url)))
+
+  def getBankHolidaysApiResponseJsonString(
+      englandAndWalesBankHolidays: Set[LocalDate] = Set.empty,
+      scotlandBankHolidays:        Set[LocalDate] = Set.empty,
+      northernIrelandBankHolidays: Set[LocalDate] = Set.empty
+  ): String = {
+      def toEvent(date: LocalDate): String =
+        s"""
+         |{
+         |  "title": "Test bank holiday ${UUID.randomUUID().toString}",
+         |  "date": "${date.format(DateTimeFormatter.ISO_DATE)}",
+         |  "notes": "",
+         |  "bunting": true
+         |}
+         |""".stripMargin
+
+    s"""
+       |{
+       |  "england-and-wales": {
+       |    "division": "england-and-wales",
+       |    "events": [ ${englandAndWalesBankHolidays.map(toEvent).mkString(",")}  ]
+       |  },
+       |  "scotland": {
+       |    "division": "scotland",
+       |    "events": [ ${scotlandBankHolidays.map(toEvent).mkString(",")} ]
+       |  },
+       |  "northern-ireland": {
+       |    "division": "northern-ireland",
+       |    "events": [ ${northernIrelandBankHolidays.map(toEvent).mkString(",")} ]
+       |  }
+       |}
+       |""".stripMargin
+  }
 
 }

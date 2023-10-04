@@ -19,11 +19,15 @@ package uk.gov.hmrc.datecalculator.config
 import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 
+import java.time.LocalTime
+
 @Singleton
 class AppConfig @Inject() (config: Configuration) {
 
   val bankHolidaysApiUrl: String = config.get[String]("bank-holiday-api.url")
 
   val bankHolidaysApiFromEmailAddress: String = config.get[String]("bank-holiday-api.from-email-address")
+
+  val dailyRefreshTime: LocalTime = LocalTime.parse(config.get[String]("bank-holiday-api.daily-refresh-time"))
 
 }

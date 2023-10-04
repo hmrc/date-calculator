@@ -20,11 +20,9 @@ import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.Application
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
-import uk.gov.hmrc.datecalculator.testsupport.stubs.GDSStub
+import uk.gov.hmrc.datecalculator.testsupport.stubs.{FakeApplicationProvider, GDSStub}
 import uk.gov.hmrc.http.test.WireMockSupport
 
 class WorkingDaysControllerItSpec
@@ -33,24 +31,12 @@ class WorkingDaysControllerItSpec
   with ScalaFutures
   with IntegrationPatience
   with GuiceOneServerPerSuite
-  with WireMockSupport {
+  with WireMockSupport
+  with FakeApplicationProvider {
 
   lazy val wsClient = app.injector.instanceOf[WSClient]
+
   lazy val baseUrl = s"http://localhost:$port"
-
-  val getBankHolidaysApiUrlPath = "/get-bank-holidays"
-  val getBankHolidaysFromEmailAddress = "it-test@email.com"
-
-  override def fakeApplication(): Application =
-    GuiceApplicationBuilder()
-      .configure(
-        "auditing.enabled" -> false,
-        "auditing.traceRequests" -> false,
-        "metrics.enabled" -> false,
-        "bank-holiday-api.url" -> s"http://localhost:${wireMockPort.toString}$getBankHolidaysApiUrlPath",
-        "bank-holiday-api.from-email-address" -> getBankHolidaysFromEmailAddress
-      )
-      .build()
 
   val getBankHolidaysApiResponse: String =
     """
