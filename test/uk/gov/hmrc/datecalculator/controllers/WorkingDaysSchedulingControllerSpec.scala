@@ -38,11 +38,14 @@ import scala.concurrent.duration._
 import java.time.{Clock, LocalDate, LocalTime, ZoneId}
 import scala.annotation.unused
 
+// the tests in this spec depend on a specific ordering of events - take care
+// when adding tests as changing one test may affect another one
 class WorkingDaysSchedulingControllerSpec extends AnyFreeSpecLike
   with Matchers
   with GuiceOneAppPerSuite
   with WireMockSupport
   with FakeApplicationProvider {
+
   // set it up so that the time now is always 08:58:25 and the scheduled daily refresh time is
   // 10:00. The scheduler should not run the first refresh job until 1 hour, 1 minute and 35 seconds
   // have passed
