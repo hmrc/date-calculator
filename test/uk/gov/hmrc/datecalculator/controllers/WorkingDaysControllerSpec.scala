@@ -19,81 +19,29 @@ package uk.gov.hmrc.datecalculator.controllers
 import org.scalatest.freespec.AnyFreeSpecLike
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.play.guice.GuiceOneServerPerTest
-import play.api.Application
 import play.api.http.Status
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.JsSuccess
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import play.api.test.FakeRequest
 import uk.gov.hmrc.datecalculator.models.{AddWorkingDaysRequest, AddWorkingDaysResponse, Region}
-import uk.gov.hmrc.datecalculator.testsupport.stubs.GDSStub
+import uk.gov.hmrc.datecalculator.testsupport.stubs.{FakeApplicationProvider, GDSStub}
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.http.test.WireMockSupport
 
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.UUID
 import scala.concurrent.Future
 
 class WorkingDaysControllerSpec extends AnyFreeSpecLike
   with Matchers
   with GuiceOneServerPerTest
-  with WireMockSupport {
-
-  val getBankHolidaysApiUrlPath = "/get-bank-holidays"
-
-  val getBankHolidaysFromEmailAddress = "unit-test@email.com"
-
-  def conf: Map[String, Any] = Map(
-    "auditing.enabled" -> false,
-    "auditing.traceRequests" -> false,
-    "bank-holiday-api.url" -> s"http://localhost:${wireMockPort.toString}$getBankHolidaysApiUrlPath",
-    "bank-holiday-api.from-email-address" -> getBankHolidaysFromEmailAddress
-  )
-
-  //in tests use `app`
-  override def fakeApplication(): Application = new GuiceApplicationBuilder()
-    .configure(conf)
-    .build()
+  with WireMockSupport
+  with FakeApplicationProvider {
 
   class Context {
 
     lazy val controller = fakeApplication().injector.instanceOf[WorkingDaysController]
 
-  }
-
-  def getBankHolidaysApiResponseJsonString(
-      englandAndWalesBankHolidays: Set[LocalDate] = Set.empty,
-      scotlandBankHolidays:        Set[LocalDate] = Set.empty,
-      northernIrelandBankHolidays: Set[LocalDate] = Set.empty
-  ): String = {
-      def toEvent(date: LocalDate): String =
-        s"""
-        |{
-        |  "title": "Test bank holiday ${UUID.randomUUID().toString}",
-        |  "date": "${date.format(DateTimeFormatter.ISO_DATE)}",
-        |  "notes": "",
-        |  "bunting": true
-        |}
-        |""".stripMargin
-
-    s"""
-      |{
-      |  "england-and-wales": {
-      |    "division": "england-and-wales",
-      |    "events": [ ${englandAndWalesBankHolidays.map(toEvent).mkString(",")}  ]
-      |  },
-      |  "scotland": {
-      |    "division": "scotland",
-      |    "events": [ ${scotlandBankHolidays.map(toEvent).mkString(",")} ]
-      |  },
-      |  "northern-ireland": {
-      |    "division": "northern-ireland",
-      |    "events": [ ${northernIrelandBankHolidays.map(toEvent).mkString(",")} ]
-      |  }
-      |}
-      |""".stripMargin
   }
 
   "POST /add-working-days must" - {
@@ -116,7 +64,7 @@ class WorkingDaysControllerSpec extends AnyFreeSpecLike
     "return a 422 when" - {
 
       "the stored list of bank holidays is empty" in new Context {
-        GDSStub.stubGetBankHolidays(getBankHolidaysApiUrlPath, Right(getBankHolidaysApiResponseJsonString()))
+        GDSStub.stubGetBankHolidays(getBankHolidaysApiUrlPath, Right(GDSStub.getBankHolidaysApiResponseJsonString()))
 
         val request = AddWorkingDaysRequest(LocalDate.of(2023, 9, 26), 3, Set(Region.EnglandAndWales))
         val result = controller.addWorkingDays(FakeRequest().withBody(request))
@@ -134,7 +82,7 @@ class WorkingDaysControllerSpec extends AnyFreeSpecLike
        *                  earliest bank holiday            latest bank holiday
        */
       val getBankHolidaysApiResponse =
-        getBankHolidaysApiResponseJsonString(englandAndWalesBankHolidays = Set(LocalDate.of(2023, 9, 25), LocalDate.of(2023, 9, 28)))
+        GDSStub.getBankHolidaysApiResponseJsonString(englandAndWalesBankHolidays = Set(LocalDate.of(2023, 9, 25), LocalDate.of(2023, 9, 28)))
 
         def test(request: AddWorkingDaysRequest)(context: Context): Unit = {
           GDSStub.stubGetBankHolidays(getBankHolidaysApiUrlPath, Right(getBankHolidaysApiResponse))
@@ -200,7 +148,7 @@ class WorkingDaysControllerSpec extends AnyFreeSpecLike
        *            bank holiday in England and Wales only ---------+         +---------- bank holiday in Scotland only
        */
       val getBankHolidaysApiResponse =
-        getBankHolidaysApiResponseJsonString(
+        GDSStub.getBankHolidaysApiResponseJsonString(
           englandAndWalesBankHolidays = Set(LocalDate.of(2023, 9, 13), LocalDate.of(2023, 9, 18), LocalDate.of(2023, 9, 22)),
           scotlandBankHolidays        = Set(LocalDate.of(2023, 9, 13), LocalDate.of(2023, 9, 19), LocalDate.of(2023, 9, 22)),
           northernIrelandBankHolidays = Set(LocalDate.of(2023, 9, 13), LocalDate.of(2023, 9, 20), LocalDate.of(2023, 9, 22))

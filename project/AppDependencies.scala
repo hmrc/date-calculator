@@ -16,7 +16,8 @@ object AppDependencies {
 
   val test = Seq(
   // format: OFF
-    "uk.gov.hmrc" %% "bootstrap-test-play-28" % bootstrapVersion % "test, it"
+    "uk.gov.hmrc"     %% "bootstrap-test-play-28" % bootstrapVersion % "test, it",
+    "com.miguno.akka" %% "akka-mock-scheduler"    % "0.5.5"          % "test"
   // format: ON
   )
 

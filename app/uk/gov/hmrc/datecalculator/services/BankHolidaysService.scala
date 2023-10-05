@@ -18,6 +18,7 @@ package uk.gov.hmrc.datecalculator.services
 
 import cats.syntax.eq._
 import com.google.inject.{Inject, Singleton}
+import play.api.Logger
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.{JsError, JsSuccess, Json, Reads}
 import uk.gov.hmrc.datecalculator.connectors.BankHolidaysConnector
@@ -32,6 +33,8 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class BankHolidaysService @Inject() (bankHolidaysConnector: BankHolidaysConnector)(implicit ec: ExecutionContext) {
 
+  private val logger: Logger = Logger(this.getClass)
+
   def getBankHolidays()(implicit hc: HeaderCarrier): Future[BankHolidays] =
     bankHolidaysConnector.getBankHolidays().map{ httpResponse =>
       if (httpResponse.status === OK) {
@@ -42,12 +45,14 @@ class BankHolidaysService @Inject() (bankHolidaysConnector: BankHolidaysConnecto
           case JsError(e) =>
             throw new Exception(s"Could not parse response from GDS get bank holidays API: ${e.toString()}")
         }
-      } else
+      } else {
+        logger.warn(s"Got http status ${httpResponse.status.toString} when calling the bank holiday API")
         throw UpstreamErrorResponse(
           message    = "Could not retrieve bank holidays",
           statusCode = httpResponse.status,
           reportAs   = INTERNAL_SERVER_ERROR
         )
+      }
     }
 
   private def toBankHolidays(gdsBankHolidays: GDSBankHolidays): BankHolidays = {
