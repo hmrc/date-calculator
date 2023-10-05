@@ -19,7 +19,7 @@ package uk.gov.hmrc.datecalculator.controllers
 import akka.actor.Scheduler
 import com.google.inject.{AbstractModule, Provides, Singleton}
 import com.miguno.akka.testing.VirtualTime
-import org.scalatest.concurrent.Eventually.eventually
+import org.scalatest.concurrent.Eventually
 import org.scalatest.concurrent.PatienceConfiguration
 import org.scalatest.freespec.AnyFreeSpecLike
 import org.scalatest.matchers.should.Matchers
@@ -83,9 +83,13 @@ class WorkingDaysSchedulingControllerSpec extends AnyFreeSpecLike
 
   lazy val controller = app.injector.instanceOf[WorkingDaysController]
 
-  "(set up - waiting for app to start)" in {
+  def eventually[A](timeout: FiniteDuration)(f: => A): A =
+    Eventually.eventually(PatienceConfiguration.Timeout(Span(timeout.toSeconds, Seconds))) {
+      f
+    }
 
-    eventually(PatienceConfiguration.Timeout(Span(5, Seconds))) {
+  "(set up - waiting for app to start)" in {
+    eventually(5.seconds) {
       hasStarted shouldBe true
     }
   }
@@ -104,7 +108,9 @@ class WorkingDaysSchedulingControllerSpec extends AnyFreeSpecLike
 
       time.advance(1)
 
-      GDSStub.verifyGetBankHolidaysCalled(getBankHolidaysApiUrlPath, getBankHolidaysFromEmailAddress)
+      eventually(1.second){
+        GDSStub.verifyGetBankHolidaysCalled(getBankHolidaysApiUrlPath, getBankHolidaysFromEmailAddress)
+      }
     }
 
     "should not happen before 24 hours have passed since the last attempt" in {
@@ -123,12 +129,14 @@ class WorkingDaysSchedulingControllerSpec extends AnyFreeSpecLike
 
       time.advance(1.millisecond)
 
-      GDSStub.verifyGetBankHolidaysCalled(getBankHolidaysApiUrlPath, getBankHolidaysFromEmailAddress)
+      eventually(1.second) {
+        GDSStub.verifyGetBankHolidaysCalled(getBankHolidaysApiUrlPath, getBankHolidaysFromEmailAddress)
+      }
     }
 
     "should result in the list of bank holidays being stored to use in working days calculation" in {
       // allow some time for the service to actually store the bank holidays
-      eventually(PatienceConfiguration.Timeout(Span(1, Seconds))) {
+      eventually(1.second) {
         val addWorkingDaysRequest = AddWorkingDaysRequest(LocalDate.of(2023, 10, 3), 1, Set(Region.EnglandAndWales))
         val result = controller.addWorkingDays(FakeRequest().withBody(addWorkingDaysRequest))
 
@@ -146,11 +154,13 @@ class WorkingDaysSchedulingControllerSpec extends AnyFreeSpecLike
 
       time.advance(24.hours)
 
-      GDSStub.verifyGetBankHolidaysCalled(getBankHolidaysApiUrlPath, getBankHolidaysFromEmailAddress)
+      eventually(1.second){
+        GDSStub.verifyGetBankHolidaysCalled(getBankHolidaysApiUrlPath, getBankHolidaysFromEmailAddress)
+      }
     }
 
     "should overwrite any existing bank holiday list if one already exists" in {
-      eventually(PatienceConfiguration.Timeout(Span(1, Seconds))) {
+      eventually(1.second) {
         val result1 = controller.addWorkingDays(FakeRequest().withBody(
           AddWorkingDaysRequest(LocalDate.of(2023, 10, 3), 1, Set(Region.EnglandAndWales))
         ))
