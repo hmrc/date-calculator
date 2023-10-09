@@ -19,12 +19,16 @@ package uk.gov.hmrc.datecalculator.testsupport.stubs
 import org.scalatestplus.play.guice.GuiceFakeApplicationFactory
 import play.api.Application
 import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
-import uk.gov.hmrc.http.test.WireMockSupport
+import uk.gov.hmrc.http.test.ExternalWireMockSupport
 
 import java.time.format.DateTimeFormatter
 import java.time.{Clock, LocalTime, ZoneId}
 
-trait FakeApplicationProvider { this: GuiceFakeApplicationFactory with WireMockSupport =>
+trait FakeApplicationProvider { this: GuiceFakeApplicationFactory with ExternalWireMockSupport =>
+
+  override def beforeEach(): Unit = {
+    externalWireMockServer.resetRequests()
+  }
 
   val getBankHolidaysApiUrlPath = "/get-bank-holidays"
 
@@ -46,7 +50,7 @@ trait FakeApplicationProvider { this: GuiceFakeApplicationFactory with WireMockS
         "auditing.enabled" -> false,
         "auditing.traceRequests" -> false,
         "metrics.enabled" -> false,
-        "bank-holiday-api.url" -> s"http://localhost:${wireMockPort.toString}$getBankHolidaysApiUrlPath",
+        "bank-holiday-api.url" -> s"${externalWireMockUrl}$getBankHolidaysApiUrlPath",
         "bank-holiday-api.from-email-address" -> getBankHolidaysFromEmailAddress,
         // make sure daily refresh doesn't happen while this spec is running - shouldn't take 24h for this spec to run
         "bank-holiday-api.daily-refresh-time" -> bankHolidayDailyRefreshTime,
