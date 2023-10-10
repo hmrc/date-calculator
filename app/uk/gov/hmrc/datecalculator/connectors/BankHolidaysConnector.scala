@@ -19,18 +19,19 @@ package uk.gov.hmrc.datecalculator.connectors
 import com.google.inject.{Inject, Singleton}
 import play.api.http.HeaderNames
 import uk.gov.hmrc.datecalculator.config.AppConfig
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.http.HttpReads.Implicits.readRaw
+import uk.gov.hmrc.http.client.HttpClientV2
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class BankHolidaysConnector @Inject() (httpClient: HttpClient, appConfig: AppConfig)(implicit ec: ExecutionContext) {
+class BankHolidaysConnector @Inject() (httpClient: HttpClientV2, appConfig: AppConfig)(implicit ec: ExecutionContext) {
 
   def getBankHolidays()(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    httpClient.GET(
-      appConfig.bankHolidaysApiUrl,
-      headers = Seq(HeaderNames.FROM -> appConfig.bankHolidaysApiFromEmailAddress)
-    )
+    httpClient.get(url"${appConfig.bankHolidaysApiUrl}")
+      .setHeader(HeaderNames.FROM -> appConfig.bankHolidaysApiFromEmailAddress)
+      .withProxy
+      .execute
 
 }

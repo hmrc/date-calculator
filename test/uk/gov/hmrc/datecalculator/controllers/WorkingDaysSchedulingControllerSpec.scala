@@ -32,7 +32,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.datecalculator.models.{AddWorkingDaysRequest, Region}
 import uk.gov.hmrc.datecalculator.services.WorkingDaysService.StartUpHook
 import uk.gov.hmrc.datecalculator.testsupport.stubs.{FakeApplicationProvider, GDSStub}
-import uk.gov.hmrc.http.test.WireMockSupport
+import uk.gov.hmrc.http.test.ExternalWireMockSupport
 
 import scala.concurrent.duration._
 import java.time.{Clock, LocalDate, LocalTime, ZoneId}
@@ -43,7 +43,7 @@ import scala.annotation.unused
 class WorkingDaysSchedulingControllerSpec extends AnyFreeSpecLike
   with Matchers
   with GuiceOneAppPerSuite
-  with WireMockSupport
+  with ExternalWireMockSupport
   with FakeApplicationProvider {
 
   // set it up so that the time now is always 08:58:25 and the scheduled daily refresh time is

@@ -27,7 +27,7 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.datecalculator.models.{AddWorkingDaysRequest, AddWorkingDaysResponse, Region}
 import uk.gov.hmrc.datecalculator.testsupport.stubs.{FakeApplicationProvider, GDSStub}
 import uk.gov.hmrc.http.UpstreamErrorResponse
-import uk.gov.hmrc.http.test.WireMockSupport
+import uk.gov.hmrc.http.test.ExternalWireMockSupport
 
 import java.time.LocalDate
 import scala.concurrent.Future
@@ -35,12 +35,12 @@ import scala.concurrent.Future
 class WorkingDaysControllerSpec extends AnyFreeSpecLike
   with Matchers
   with GuiceOneServerPerTest
-  with WireMockSupport
+  with ExternalWireMockSupport
   with FakeApplicationProvider {
 
   class Context {
 
-    lazy val controller = fakeApplication().injector.instanceOf[WorkingDaysController]
+    lazy val controller = app.injector.instanceOf[WorkingDaysController]
 
   }
 
