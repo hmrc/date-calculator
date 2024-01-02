@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.datecalculator.services
 
-import akka.actor.{Cancellable, Scheduler}
 import cats.syntax.eq._
 import com.google.inject.{Inject, Singleton}
+import org.apache.pekko.actor.{Cancellable, Scheduler}
 import play.api.Logger
 import play.api.inject.ApplicationLifecycle
 import uk.gov.hmrc.datecalculator.config.AppConfig

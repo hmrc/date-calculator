@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.datecalculator.config
 
-import akka.actor.{ActorSystem, Scheduler}
 import com.google.inject.{AbstractModule, Provides, Singleton}
+import org.apache.pekko.actor.{ActorSystem, Scheduler}
 import uk.gov.hmrc.datecalculator.services.WorkingDaysService
 
 import java.time.{Clock, ZoneId}
