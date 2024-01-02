@@ -1,23 +1,20 @@
-import play.core.PlayVersion
-import play.sbt.PlayImport._
-import sbt.Keys.libraryDependencies
 import sbt._
 
 object AppDependencies {
 
-  private val bootstrapVersion = "7.22.0"
+  private val bootstrapVersion = "8.3.0"
 
   val compile = Seq(
   // format: OFF
-    "uk.gov.hmrc"    %% "bootstrap-backend-play-28"    % bootstrapVersion,
+    "uk.gov.hmrc"    %% "bootstrap-backend-play-30"    % bootstrapVersion,
     "org.typelevel"  %% "cats-core"                    % "2.10.0"
   // format: ON
   )
 
   val test = Seq(
   // format: OFF
-    "uk.gov.hmrc"     %% "bootstrap-test-play-28" % bootstrapVersion % "test, it",
-    "com.miguno.akka" %% "akka-mock-scheduler"    % "0.5.5"          % "test"
+    "uk.gov.hmrc"          %% "bootstrap-test-play-30"  % bootstrapVersion % "test",
+    "com.github.pjfanning" %% "pekko-mock-scheduler"    % "0.6.0"          % "test"
   // format: ON
   )
 

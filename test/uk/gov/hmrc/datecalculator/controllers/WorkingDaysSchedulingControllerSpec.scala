@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.datecalculator.controllers
 
-import akka.actor.Scheduler
 import com.google.inject.{AbstractModule, Provides, Singleton}
-import com.miguno.akka.testing.VirtualTime
+import com.github.pjfanning.pekko.scheduler.mock.VirtualTime
+import org.apache.pekko.actor.Scheduler
 import org.scalatest.concurrent.Eventually
 import org.scalatest.concurrent.PatienceConfiguration
 import org.scalatest.freespec.AnyFreeSpecLike
