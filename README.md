@@ -9,7 +9,7 @@ can be used to stub out this API.
 
 ---
 
-## GET /date-calculator/add-working-days
+## POST /date-calculator/add-working-days
 Adds or subtracts a number of working days to a date. The request JSON should look like this:
 ```json
 {
