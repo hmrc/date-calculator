@@ -19,6 +19,7 @@ package uk.gov.hmrc.datecalculator.config
 import com.google.inject.{AbstractModule, Provides, Singleton}
 import org.apache.pekko.actor.{ActorSystem, Scheduler}
 import uk.gov.hmrc.datecalculator.services.WorkingDaysService
+import uk.gov.hmrc.datecalculator.thing.Thing
 
 import java.time.{Clock, ZoneId}
 class Module extends AbstractModule {
@@ -26,6 +27,7 @@ class Module extends AbstractModule {
   override def configure(): Unit = {
     bind(classOf[AppConfig]).asEagerSingleton()
     bind(classOf[WorkingDaysService]).asEagerSingleton()
+    bind(classOf[Thing]).asEagerSingleton()
   }
 
   @Provides
