@@ -17,6 +17,7 @@
 package uk.gov.hmrc.datecalculator.controllers
 
 import play.api.libs.json.Json
+import play.api.mvc.Request
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import play.api.mvc.{Action, ControllerComponents}
 import uk.gov.hmrc.datecalculator.models.{AddWorkingDaysError, AddWorkingDaysRequest, AddWorkingDaysResponse}
@@ -27,22 +28,23 @@ import scala.concurrent.ExecutionContext
 
 @Singleton()
 class WorkingDaysController @Inject() (
-    workingDaysService: WorkingDaysService,
-    cc:                 ControllerComponents
-)(implicit ex: ExecutionContext)
-  extends BackendController(cc) {
+  workingDaysService: WorkingDaysService,
+  cc:                 ControllerComponents
+)(using ExecutionContext)
+    extends BackendController(cc) {
 
-  val addWorkingDays: Action[AddWorkingDaysRequest] = Action(parse.json[AddWorkingDaysRequest]).async { implicit request =>
-    workingDaysService.addWorkingDays(request.body).map {
-      case Left(AddWorkingDaysError.NoRegionsInRequest) =>
-        BadRequest("Request must contain at least one region")
+  val addWorkingDays: Action[AddWorkingDaysRequest] = Action(parse.json[AddWorkingDaysRequest]).async {
+    case request @ given Request[AddWorkingDaysRequest] =>
+      workingDaysService.addWorkingDays(request.body).map {
+        case Left(AddWorkingDaysError.NoRegionsInRequest) =>
+          BadRequest("Request must contain at least one region")
 
-      case Left(AddWorkingDaysError.CalculationBeyondKnownBankHolidays) =>
-        UnprocessableEntity
+        case Left(AddWorkingDaysError.CalculationBeyondKnownBankHolidays) =>
+          UnprocessableEntity
 
-      case Right(date) =>
-        Ok(Json.toJson(AddWorkingDaysResponse(date)))
-    }
+        case Right(date) =>
+          Ok(Json.toJson(AddWorkingDaysResponse(date)))
+      }
   }
 
 }

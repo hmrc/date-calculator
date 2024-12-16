@@ -22,21 +22,23 @@ import org.scalatestplus.play.guice.GuiceOneServerPerTest
 import play.api.http.Status
 import play.api.libs.json.JsSuccess
 import play.api.mvc.Result
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import play.api.test.FakeRequest
 import uk.gov.hmrc.datecalculator.models.{AddWorkingDaysRequest, AddWorkingDaysResponse, Region}
 import uk.gov.hmrc.datecalculator.testsupport.stubs.{FakeApplicationProvider, GDSStub}
+import uk.gov.hmrc.datecalculator.testsupport.Givens.{jsResultCanEqual, jsValueCanEqual}
 import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.http.test.ExternalWireMockSupport
 
 import java.time.LocalDate
 import scala.concurrent.Future
 
-class WorkingDaysControllerSpec extends AnyFreeSpecLike
-  with Matchers
-  with GuiceOneServerPerTest
-  with ExternalWireMockSupport
-  with FakeApplicationProvider {
+class WorkingDaysControllerSpec
+    extends AnyFreeSpecLike,
+      Matchers,
+      GuiceOneServerPerTest,
+      ExternalWireMockSupport,
+      FakeApplicationProvider {
 
   class Context {
 
@@ -52,7 +54,7 @@ class WorkingDaysControllerSpec extends AnyFreeSpecLike
         GDSStub.stubGetBankHolidays(getBankHolidaysApiUrlPath, Left(503))
 
         val request = AddWorkingDaysRequest(LocalDate.of(2023, 9, 26), 3, Set(Region.EnglandAndWales))
-        val result = controller.addWorkingDays(FakeRequest().withBody(request))
+        val result  = controller.addWorkingDays(FakeRequest().withBody(request))
 
         val exception = intercept[UpstreamErrorResponse](await(result))
         exception.statusCode shouldBe 503
@@ -67,36 +69,34 @@ class WorkingDaysControllerSpec extends AnyFreeSpecLike
         GDSStub.stubGetBankHolidays(getBankHolidaysApiUrlPath, Right(GDSStub.getBankHolidaysApiResponseJsonString()))
 
         val request = AddWorkingDaysRequest(LocalDate.of(2023, 9, 26), 3, Set(Region.EnglandAndWales))
-        val result = controller.addWorkingDays(FakeRequest().withBody(request))
+        val result  = controller.addWorkingDays(FakeRequest().withBody(request))
 
         status(result) shouldBe UNPROCESSABLE_ENTITY
         GDSStub.verifyGetBankHolidaysCalled(getBankHolidaysApiUrlPath, getBankHolidaysFromEmailAddress)
       }
 
-      /**
-       * use this set up in the tests below
-       *
-       * Sep--22------23------24------25------26------27------28------29------30------31-Oct--01------02
-       *     Fri     Sat     Sun     Mon     Tue     Wed     Thu     Fri     Sat     Sun     Mon     Tue
-       *                              ^                       ^
-       *                  earliest bank holiday            latest bank holiday
-       */
+      /** use this set up in the tests below
+        *
+        * Sep--22------23------24------25------26------27------28------29------30------31-Oct--01------02 Fri Sat Sun
+        * Mon Tue Wed Thu Fri Sat Sun Mon Tue ^ ^ earliest bank holiday latest bank holiday
+        */
       val getBankHolidaysApiResponse =
-        GDSStub.getBankHolidaysApiResponseJsonString(englandAndWalesBankHolidays = Set(LocalDate.of(2023, 9, 25), LocalDate.of(2023, 9, 28)))
+        GDSStub.getBankHolidaysApiResponseJsonString(englandAndWalesBankHolidays =
+          Set(LocalDate.of(2023, 9, 25), LocalDate.of(2023, 9, 28))
+        )
 
-        def test(request: AddWorkingDaysRequest)(context: Context): Unit = {
-          GDSStub.stubGetBankHolidays(getBankHolidaysApiUrlPath, Right(getBankHolidaysApiResponse))
+      def test(request: AddWorkingDaysRequest)(context: Context): Unit = {
+        GDSStub.stubGetBankHolidays(getBankHolidaysApiUrlPath, Right(getBankHolidaysApiResponse))
 
-          val result = context.controller.addWorkingDays(FakeRequest().withBody(request))
+        val result = context.controller.addWorkingDays(FakeRequest().withBody(request))
 
-          status(result) shouldBe UNPROCESSABLE_ENTITY
-          GDSStub.verifyGetBankHolidaysCalled(getBankHolidaysApiUrlPath, getBankHolidaysFromEmailAddress)
-        }
+        status(result) shouldBe UNPROCESSABLE_ENTITY
+        GDSStub.verifyGetBankHolidaysCalled(getBankHolidaysApiUrlPath, getBankHolidaysFromEmailAddress)
+      }
 
       "the date in the request is more than one day (excluding weekends) before the earliest known bank holiday and the number " +
         "of days to add is positive" in new Context {
           test(AddWorkingDaysRequest(LocalDate.of(2023, 9, 21), 1, Set(Region.EnglandAndWales)))(this)
-
         }
 
       "the date in the request is equal to the earliest known bank holiday and the number of days to " +
@@ -130,45 +130,36 @@ class WorkingDaysControllerSpec extends AnyFreeSpecLike
 
     "return a 200 and return the correct result when" - {
 
-      /**
-       * Base tests on this setup:
-       *
-       * Sep--13----------14----------15--------16--------17--------18--------19--------20--------21--------22
-       *     Wed         Thu         Fri       Sat       Sun       Mon       Tue       Wed       Thu       Fri
-       *      ^                                                     ^         ^         ^                   ^
-       *      ^                                                     ^         ^         ^                   ^
-       *      ^                                                     ^         ^         ^                   ^
-       *  earliest bank holiday in all regions                      ^         ^         ^                latest bank holiday in all regions
-       *                                                            ^         ^         ^
-       *                                                            ^         ^         ^
-       *                                                            ^         ^        bank holiday in Northern Ireland only
-       *                                                            ^         ^
-       *                                                            ^         ^
-       *                                                            ^         ^
-       *            bank holiday in England and Wales only ---------+         +---------- bank holiday in Scotland only
-       */
+      /** Base tests on this setup:
+        *
+        * Sep--13----------14----------15--------16--------17--------18--------19--------20--------21--------22 Wed Thu
+        * Fri Sat Sun Mon Tue Wed Thu Fri ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ earliest bank holiday in all regions ^ ^ ^
+        * latest bank holiday in all regions ^ ^ ^ ^ ^ ^ ^ ^ bank holiday in Northern Ireland only ^ ^ ^ ^ ^ ^ bank
+        * holiday in England and Wales only ---------+ +---------- bank holiday in Scotland only
+        */
       val getBankHolidaysApiResponse =
         GDSStub.getBankHolidaysApiResponseJsonString(
-          englandAndWalesBankHolidays = Set(LocalDate.of(2023, 9, 13), LocalDate.of(2023, 9, 18), LocalDate.of(2023, 9, 22)),
-          scotlandBankHolidays        = Set(LocalDate.of(2023, 9, 13), LocalDate.of(2023, 9, 19), LocalDate.of(2023, 9, 22)),
-          northernIrelandBankHolidays = Set(LocalDate.of(2023, 9, 13), LocalDate.of(2023, 9, 20), LocalDate.of(2023, 9, 22))
+          englandAndWalesBankHolidays =
+            Set(LocalDate.of(2023, 9, 13), LocalDate.of(2023, 9, 18), LocalDate.of(2023, 9, 22)),
+          scotlandBankHolidays = Set(LocalDate.of(2023, 9, 13), LocalDate.of(2023, 9, 19), LocalDate.of(2023, 9, 22)),
+          northernIrelandBankHolidays =
+            Set(LocalDate.of(2023, 9, 13), LocalDate.of(2023, 9, 20), LocalDate.of(2023, 9, 22))
         )
 
-        def test(
-            request:            AddWorkingDaysRequest,
-            expectedResultBody: AddWorkingDaysResponse
-        )(context: Context) = {
-          withClue(s"For ${request.toString}: ") {
-            GDSStub.stubGetBankHolidays(getBankHolidaysApiUrlPath, Right(getBankHolidaysApiResponse))
+      def test(
+        request:            AddWorkingDaysRequest,
+        expectedResultBody: AddWorkingDaysResponse
+      )(context: Context) =
+        withClue(s"For ${request.toString}: ") {
+          GDSStub.stubGetBankHolidays(getBankHolidaysApiUrlPath, Right(getBankHolidaysApiResponse))
 
-            val fakeRequest = FakeRequest().withBody(request)
-            val result: Future[Result] = context.controller.addWorkingDays(fakeRequest)
+          val fakeRequest            = FakeRequest().withBody(request)
+          val result: Future[Result] = context.controller.addWorkingDays(fakeRequest)
 
-            status(result) shouldBe Status.OK
-            contentAsJson(result).validate[AddWorkingDaysResponse] shouldBe JsSuccess(expectedResultBody)
+          status(result) shouldBe Status.OK
+          contentAsJson(result).validate[AddWorkingDaysResponse] shouldBe JsSuccess(expectedResultBody)
 
-            GDSStub.verifyGetBankHolidaysCalled(getBankHolidaysApiUrlPath, getBankHolidaysFromEmailAddress)
-          }
+          GDSStub.verifyGetBankHolidaysCalled(getBankHolidaysApiUrlPath, getBankHolidaysFromEmailAddress)
         }
 
       "the number of workings days to add is zero and" - {

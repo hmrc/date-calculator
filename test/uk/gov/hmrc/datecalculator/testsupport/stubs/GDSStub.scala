@@ -49,12 +49,12 @@ object GDSStub {
     verify(exactly(0), getRequestedFor(urlPathEqualTo(url)))
 
   def getBankHolidaysApiResponseJsonString(
-      englandAndWalesBankHolidays: Set[LocalDate] = Set.empty,
-      scotlandBankHolidays:        Set[LocalDate] = Set.empty,
-      northernIrelandBankHolidays: Set[LocalDate] = Set.empty
+    englandAndWalesBankHolidays: Set[LocalDate] = Set.empty,
+    scotlandBankHolidays:        Set[LocalDate] = Set.empty,
+    northernIrelandBankHolidays: Set[LocalDate] = Set.empty
   ): String = {
-      def toEvent(date: LocalDate): String =
-        s"""
+    def toEvent(date: LocalDate): String =
+      s"""
          |{
          |  "title": "Test bank holiday ${UUID.randomUUID().toString}",
          |  "date": "${date.format(DateTimeFormatter.ISO_DATE)}",

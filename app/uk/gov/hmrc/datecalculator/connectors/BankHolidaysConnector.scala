@@ -26,10 +26,11 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class BankHolidaysConnector @Inject() (httpClient: HttpClientV2, appConfig: AppConfig)(implicit ec: ExecutionContext) {
+class BankHolidaysConnector @Inject() (httpClient: HttpClientV2, appConfig: AppConfig)(using ExecutionContext) {
 
-  def getBankHolidays()(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    httpClient.get(url"${appConfig.bankHolidaysApiUrl}")
+  def getBankHolidays()(using hc: HeaderCarrier): Future[HttpResponse] =
+    httpClient
+      .get(url"${appConfig.bankHolidaysApiUrl}")
       .setHeader(HeaderNames.FROM -> appConfig.bankHolidaysApiFromEmailAddress)
       .withProxy
       .execute

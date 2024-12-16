@@ -22,17 +22,12 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
+import play.api.libs.ws.writeableOf_String
 import uk.gov.hmrc.datecalculator.testsupport.stubs.{FakeApplicationProvider, GDSStub}
 import uk.gov.hmrc.http.test.ExternalWireMockSupport
 
 class WorkingDaysControllerItSpec
-  extends AnyWordSpec
-  with Matchers
-  with ScalaFutures
-  with IntegrationPatience
-  with GuiceOneServerPerSuite
-  with ExternalWireMockSupport
-  with FakeApplicationProvider {
+  extends AnyWordSpec, Matchers, ScalaFutures, IntegrationPatience, GuiceOneServerPerSuite, ExternalWireMockSupport, FakeApplicationProvider {
 
   lazy val wsClient = app.injector.instanceOf[WSClient]
 
