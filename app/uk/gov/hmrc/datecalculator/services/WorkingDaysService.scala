@@ -30,19 +30,18 @@ import java.time.{Clock, LocalDate, LocalTime}
 import java.time.temporal.ChronoField
 import java.util.concurrent.atomic.AtomicReference
 import scala.annotation.tailrec
-import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 @Singleton
 class WorkingDaysService @Inject() (
-    appConfig:            AppConfig,
-    bankHolidaysService:  BankHolidaysService,
-    scheduler:            Scheduler,
-    clock:                Clock,
-    startUpHook:          StartUpHook,
-    applicationLifecycle: ApplicationLifecycle
+  appConfig:            AppConfig,
+  bankHolidaysService:  BankHolidaysService,
+  scheduler:            Scheduler,
+  clock:                Clock,
+  startUpHook:          StartUpHook,
+  applicationLifecycle: ApplicationLifecycle
 )(implicit ec: ExecutionContext) {
 
   import WorkingDaysService.LocalDateOps
@@ -57,23 +56,25 @@ class WorkingDaysService @Inject() (
     val timeUntilNextRefresh = timeUntil(appConfig.dailyRefreshTime)
 
     val timeString = {
-      val hours = timeUntilNextRefresh.toHours
+      val hours   = timeUntilNextRefresh.toHours
       val minutes = (timeUntilNextRefresh - hours.hours).toMinutes
       val seconds = (timeUntilNextRefresh - hours.hours - minutes.minutes).toSeconds
       s"${hours.toString}h${minutes.toString}m${seconds.toString}s"
     }
-    logger.info(s"Scheduling next bank holidays daily refresh for ${appConfig.dailyRefreshTime.toString} in $timeString")
+    logger.info(
+      s"Scheduling next bank holidays daily refresh for ${appConfig.dailyRefreshTime.toString} in $timeString"
+    )
 
     scheduler.scheduleWithFixedDelay(
       timeUntilNextRefresh,
       24.hours
     )(new Runnable {
-        override def run(): Unit =
-          getAndSetBankHolidays()(HeaderCarrier()).onComplete {
-            case Failure(e) => logger.warn(s"Could not refresh bank holidays", e)
-            case Success(_) => logger.info(s"Successfully refreshed bank holidays")
-          }
-      })
+      override def run(): Unit =
+        getAndSetBankHolidays()(HeaderCarrier()).onComplete {
+          case Failure(e) => logger.warn(s"Could not refresh bank holidays", e)
+          case Success(_) => logger.info(s"Successfully refreshed bank holidays")
+        }
+    })
   }
 
   private def timeUntil(t: LocalTime): FiniteDuration = {
@@ -95,25 +96,34 @@ class WorkingDaysService @Inject() (
 
   applicationLifecycle.addStopHook(() => Future.successful(bankHolidaysDailyRefreshJob.cancel()))
 
-  def addWorkingDays(request: AddWorkingDaysRequest)(implicit hc: HeaderCarrier): Future[Either[AddWorkingDaysError, LocalDate]] =
+  def addWorkingDays(
+    request: AddWorkingDaysRequest
+  )(implicit hc: HeaderCarrier): Future[Either[AddWorkingDaysError, LocalDate]] =
     if (request.regions.isEmpty)
       Future.successful(Left(AddWorkingDaysError.NoRegionsInRequest))
     else
       for {
         bankHolidays <- maybeBankHolidays.get().fold(getAndSetBankHolidays())(Future.successful)
-        result <- Future.successful(calculateWorkingDays(request, bankHolidays))
+        result       <- Future.successful(calculateWorkingDays(request, bankHolidays))
       } yield result
 
   private def calculateWorkingDays(
-      request:      AddWorkingDaysRequest,
-      bankHolidays: BankHolidays
+    request: AddWorkingDaysRequest,
+    bankHolidays: BankHolidays
   ): Either[AddWorkingDaysError, LocalDate] = {
     val relevantBankHolidays = getRelevantBankHolidays(request, bankHolidays)
 
     (relevantBankHolidays.minOption, relevantBankHolidays.maxOption) match {
       case (Some(earliestKnownBankHoliday), Some(latestKnownBankHoliday)) =>
         if (request.numberOfWorkingDaysToAdd === 0) Right(request.date)
-        else nWorkingDaysFrom(request.date, request.numberOfWorkingDaysToAdd, relevantBankHolidays, earliestKnownBankHoliday, latestKnownBankHoliday)
+        else
+          nWorkingDaysFrom(
+            request.date,
+            request.numberOfWorkingDaysToAdd,
+            relevantBankHolidays,
+            earliestKnownBankHoliday,
+            latestKnownBankHoliday
+          )
 
       case _ =>
         Left(AddWorkingDaysError.CalculationBeyondKnownBankHolidays)
@@ -121,12 +131,12 @@ class WorkingDaysService @Inject() (
   }
 
   private def getRelevantBankHolidays(
-      request:      AddWorkingDaysRequest,
-      bankHolidays: BankHolidays
+    request: AddWorkingDaysRequest,
+    bankHolidays: BankHolidays
   ): Set[BankHoliday] = {
     val englandAndWalesBankHolidays =
       if (request.regions.contains(Region.EnglandAndWales)) bankHolidays.englandAndWales else Set.empty
-    val scotlandBankHolidays =
+    val scotlandBankHolidays        =
       if (request.regions.contains(Region.Scotland)) bankHolidays.scotland else Set.empty
     val northernIrelandBankHolidays =
       if (request.regions.contains(Region.NorthernIreland)) bankHolidays.northernIreland else Set.empty
@@ -136,11 +146,11 @@ class WorkingDaysService @Inject() (
 
   @tailrec
   private def nWorkingDaysFrom(
-      date:                     LocalDate,
-      n:                        Int,
-      bankHolidays:             Set[BankHoliday],
-      earliestKnownBankHoliday: BankHoliday,
-      latestKnownBankHoliday:   BankHoliday
+    date: LocalDate,
+    n: Int,
+    bankHolidays: Set[BankHoliday],
+    earliestKnownBankHoliday: BankHoliday,
+    latestKnownBankHoliday: BankHoliday
   ): Either[AddWorkingDaysError, LocalDate] = {
     val signum: Int = n.sign
 
@@ -150,11 +160,11 @@ class WorkingDaysService @Inject() (
       else
         Right(date)
     } else {
-      val adjustedDate = date.plusDays(signum)
-      val dayNumber: Int = adjustedDate.get(ChronoField.DAY_OF_WEEK)
-      val isWeekend = dayNumber === 6 || dayNumber === 7
+      val adjustedDate           = date.plusDays(signum)
+      val dayNumber: Int         = adjustedDate.get(ChronoField.DAY_OF_WEEK)
+      val isWeekend              = dayNumber === 6 || dayNumber === 7
       val isBankHoliday: Boolean = bankHolidays.contains(BankHoliday(adjustedDate))
-      val isWorkingDay = !isBankHoliday && !isWeekend
+      val isWorkingDay           = !isBankHoliday && !isWeekend
 
       nWorkingDaysFrom(
         adjustedDate,
@@ -167,7 +177,7 @@ class WorkingDaysService @Inject() (
   }
 
   private def getAndSetBankHolidays()(implicit hc: HeaderCarrier): Future[BankHolidays] =
-    bankHolidaysService.getBankHolidays().map{ bankHolidays =>
+    bankHolidaysService.getBankHolidays().map { bankHolidays =>
       maybeBankHolidays.set(Some(bankHolidays))
       bankHolidays
     }

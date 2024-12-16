@@ -13,7 +13,8 @@ object CodeCoverageSettings {
     "testOnly.*",
     "testOnlyDoNotUseInAppConf.*",
     ".*Module.*",
-    ".*AppConfig.*"
+    ".*AppConfig.*",
+    ".*\\$anon.*"
   )
 
   val settings: Seq[Setting[_]] = Seq(

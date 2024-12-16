@@ -27,22 +27,23 @@ import scala.concurrent.ExecutionContext
 
 @Singleton()
 class WorkingDaysController @Inject() (
-    workingDaysService: WorkingDaysService,
-    cc:                 ControllerComponents
+  workingDaysService: WorkingDaysService,
+  cc:                 ControllerComponents
 )(implicit ex: ExecutionContext)
-  extends BackendController(cc) {
+    extends BackendController(cc) {
 
-  val addWorkingDays: Action[AddWorkingDaysRequest] = Action(parse.json[AddWorkingDaysRequest]).async { implicit request =>
-    workingDaysService.addWorkingDays(request.body).map {
-      case Left(AddWorkingDaysError.NoRegionsInRequest) =>
-        BadRequest("Request must contain at least one region")
+  val addWorkingDays: Action[AddWorkingDaysRequest] = Action(parse.json[AddWorkingDaysRequest]).async {
+    implicit request =>
+      workingDaysService.addWorkingDays(request.body).map {
+        case Left(AddWorkingDaysError.NoRegionsInRequest) =>
+          BadRequest("Request must contain at least one region")
 
-      case Left(AddWorkingDaysError.CalculationBeyondKnownBankHolidays) =>
-        UnprocessableEntity
+        case Left(AddWorkingDaysError.CalculationBeyondKnownBankHolidays) =>
+          UnprocessableEntity
 
-      case Right(date) =>
-        Ok(Json.toJson(AddWorkingDaysResponse(date)))
-    }
+        case Right(date) =>
+          Ok(Json.toJson(AddWorkingDaysResponse(date)))
+      }
   }
 
 }

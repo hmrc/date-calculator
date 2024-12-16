@@ -17,7 +17,7 @@
 package uk.gov.hmrc.datecalculator.models
 
 final case class BankHolidays(
-    englandAndWales: Set[BankHoliday],
-    scotland:        Set[BankHoliday],
-    northernIreland: Set[BankHoliday]
+  englandAndWales: Set[BankHoliday],
+  scotland:        Set[BankHoliday],
+  northernIreland: Set[BankHoliday]
 )

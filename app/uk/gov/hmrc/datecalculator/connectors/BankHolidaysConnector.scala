@@ -29,7 +29,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class BankHolidaysConnector @Inject() (httpClient: HttpClientV2, appConfig: AppConfig)(implicit ec: ExecutionContext) {
 
   def getBankHolidays()(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    httpClient.get(url"${appConfig.bankHolidaysApiUrl}")
+    httpClient
+      .get(url"${appConfig.bankHolidaysApiUrl}")
       .setHeader(HeaderNames.FROM -> appConfig.bankHolidaysApiFromEmailAddress)
       .withProxy
       .execute

@@ -26,9 +26,8 @@ import java.time.{Clock, LocalTime, ZoneId}
 
 trait FakeApplicationProvider { this: GuiceFakeApplicationFactory with ExternalWireMockSupport =>
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     externalWireMockServer.resetRequests()
-  }
 
   val getBankHolidaysApiUrlPath = "/get-bank-holidays"
 
@@ -47,13 +46,13 @@ trait FakeApplicationProvider { this: GuiceFakeApplicationFactory with ExternalW
   override def fakeApplication(): Application =
     GuiceApplicationBuilder()
       .configure(
-        "auditing.enabled" -> false,
-        "auditing.traceRequests" -> false,
-        "metrics.enabled" -> false,
-        "bank-holiday-api.url" -> s"${externalWireMockUrl}$getBankHolidaysApiUrlPath",
+        "auditing.enabled"                    -> false,
+        "auditing.traceRequests"              -> false,
+        "metrics.enabled"                     -> false,
+        "bank-holiday-api.url"                -> s"$externalWireMockUrl$getBankHolidaysApiUrlPath",
         "bank-holiday-api.from-email-address" -> getBankHolidaysFromEmailAddress,
         // make sure daily refresh doesn't happen while this spec is running - shouldn't take 24h for this spec to run
-        "bank-holiday-api.daily-refresh-time" -> bankHolidayDailyRefreshTime,
+        "bank-holiday-api.daily-refresh-time" -> bankHolidayDailyRefreshTime
       )
       .configure(overrideConfig)
       .overrides(overrideModules: _*)

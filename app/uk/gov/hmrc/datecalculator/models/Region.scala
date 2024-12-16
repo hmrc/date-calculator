@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.datecalculator.models
 
-sealed trait Region
+sealed trait Region extends Product with Serializable
 
 object Region {
 

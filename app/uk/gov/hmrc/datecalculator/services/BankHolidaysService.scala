@@ -36,7 +36,7 @@ class BankHolidaysService @Inject() (bankHolidaysConnector: BankHolidaysConnecto
   private val logger: Logger = Logger(this.getClass)
 
   def getBankHolidays()(implicit hc: HeaderCarrier): Future[BankHolidays] =
-    bankHolidaysConnector.getBankHolidays().map{ httpResponse =>
+    bankHolidaysConnector.getBankHolidays().map { httpResponse =>
       if (httpResponse.status === OK) {
         httpResponse.json.validate[GDSBankHolidays] match {
           case JsSuccess(gdsBankHolidays, _) =>
@@ -48,15 +48,15 @@ class BankHolidaysService @Inject() (bankHolidaysConnector: BankHolidaysConnecto
       } else {
         logger.warn(s"Got http status ${httpResponse.status.toString} when calling the bank holiday API")
         throw UpstreamErrorResponse(
-          message    = "Could not retrieve bank holidays",
+          message = "Could not retrieve bank holidays",
           statusCode = httpResponse.status,
-          reportAs   = INTERNAL_SERVER_ERROR
+          reportAs = INTERNAL_SERVER_ERROR
         )
       }
     }
 
   private def toBankHolidays(gdsBankHolidays: GDSBankHolidays): BankHolidays = {
-      def toBankHolidays(events: Seq[Event]): Set[BankHoliday] = events.map(event => BankHoliday(event.date)).toSet
+    def toBankHolidays(events: Seq[Event]): Set[BankHoliday] = events.map(event => BankHoliday(event.date)).toSet
 
     BankHolidays(
       toBankHolidays(gdsBankHolidays.`england-and-wales`.events),
@@ -74,9 +74,9 @@ object BankHolidaysService {
   private final case class RegionalResult(events: Seq[Event])
 
   private final case class GDSBankHolidays(
-      `england-and-wales`: RegionalResult,
-      scotland:            RegionalResult,
-      `northern-ireland`:  RegionalResult
+    `england-and-wales`: RegionalResult,
+    scotland:            RegionalResult,
+    `northern-ireland`:  RegionalResult
   )
 
   private implicit val eventReads: Reads[Event] = {
