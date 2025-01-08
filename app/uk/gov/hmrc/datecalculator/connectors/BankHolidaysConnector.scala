@@ -28,7 +28,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class BankHolidaysConnector @Inject() (httpClient: HttpClientV2, appConfig: AppConfig)(using ExecutionContext) {
 
-  def getBankHolidays()(using hc: HeaderCarrier): Future[HttpResponse] =
+  def getBankHolidays()(using HeaderCarrier): Future[HttpResponse] =
     httpClient
       .get(url"${appConfig.bankHolidaysApiUrl}")
       .setHeader(HeaderNames.FROM -> appConfig.bankHolidaysApiFromEmailAddress)

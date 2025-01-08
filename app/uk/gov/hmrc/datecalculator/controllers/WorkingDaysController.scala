@@ -33,18 +33,19 @@ class WorkingDaysController @Inject() (
 )(using ExecutionContext)
     extends BackendController(cc) {
 
-  val addWorkingDays: Action[AddWorkingDaysRequest] = Action(parse.json[AddWorkingDaysRequest]).async {
-    case request @ given Request[AddWorkingDaysRequest] =>
-      workingDaysService.addWorkingDays(request.body).map {
-        case Left(AddWorkingDaysError.NoRegionsInRequest) =>
-          BadRequest("Request must contain at least one region")
+  val addWorkingDays: Action[AddWorkingDaysRequest] = Action(parse.json[AddWorkingDaysRequest]).async { request =>
+    given Request[AddWorkingDaysRequest] = request
 
-        case Left(AddWorkingDaysError.CalculationBeyondKnownBankHolidays) =>
-          UnprocessableEntity
+    workingDaysService.addWorkingDays(request.body).map {
+      case Left(AddWorkingDaysError.NoRegionsInRequest) =>
+        BadRequest("Request must contain at least one region")
 
-        case Right(date) =>
-          Ok(Json.toJson(AddWorkingDaysResponse(date)))
-      }
+      case Left(AddWorkingDaysError.CalculationBeyondKnownBankHolidays) =>
+        UnprocessableEntity
+
+      case Right(date) =>
+        Ok(Json.toJson(AddWorkingDaysResponse(date)))
+    }
   }
 
 }

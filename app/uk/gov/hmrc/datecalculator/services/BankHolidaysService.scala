@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.datecalculator.services
 
-import cats.syntax.eq.*
 import com.google.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
@@ -37,7 +36,7 @@ class BankHolidaysService @Inject() (bankHolidaysConnector: BankHolidaysConnecto
 
   def getBankHolidays()(using hc: HeaderCarrier): Future[BankHolidays] =
     bankHolidaysConnector.getBankHolidays().map { httpResponse =>
-      if httpResponse.status === OK then
+      if httpResponse.status == OK then
         httpResponse.json.validate[GDSBankHolidays] match {
           case JsSuccess(gdsBankHolidays, _) =>
             toBankHolidays(gdsBankHolidays)
