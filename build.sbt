@@ -1,6 +1,6 @@
 import uk.gov.hmrc.DefaultBuildSettings
 
-ThisBuild / majorVersion := 0
+ThisBuild / majorVersion := 1
 ThisBuild / scalaVersion := "3.3.4"
 
 lazy val scalaCompilerOptions = Seq(
