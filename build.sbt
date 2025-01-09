@@ -1,20 +1,18 @@
 import uk.gov.hmrc.DefaultBuildSettings
 
-ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "2.13.12"
+ThisBuild / majorVersion := 1
+ThisBuild / scalaVersion := "3.3.4"
 
 lazy val scalaCompilerOptions = Seq(
     "-Xfatal-warnings",
-    "-Xlint:-missing-interpolator,_",
-    "-Xlint:adapted-args",
-    "-Ywarn-value-discard",
-    "-Ywarn-dead-code",
+    "-Wvalue-discard",
     "-deprecation",
     "-feature",
     "-unchecked",
     "-language:implicitConversions",
+    "-language:strictEquality",
     // required in place of silencer plugin
-    "-Wconf:cat=unused-imports&src=html/.*:s",
+    "-Wconf:msg=unused-imports&src=html/.*:s",
     "-Wconf:src=routes/.*:s"
 )
 
@@ -24,17 +22,15 @@ lazy val microservice = Project("date-calculator", file("."))
   .settings(
     scalacOptions       ++= scalaCompilerOptions,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
-    // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
-    // suppress warnings in generated routes files
-    scalacOptions += "-Wconf:src=routes/.*:s",
     PlayKeys.playDefaultPort := 8762,
-    Compile / doc / scalacOptions := Seq() //this will allow to have warnings in `doc` task and not fail the build
+    Compile / doc / scalacOptions := Seq(), //this will allow to have warnings in `doc` task and not fail the build
+    scalafmtOnCompile := true
   )
   .settings(WartRemoverSettings.wartRemoverSettings)
-  .settings(ScalariformSettings.scalariformSettings)
   .settings(SbtUpdatesSettings.sbtUpdatesSettings)
   .settings(resolvers += Resolver.jcenterRepo)
   .settings(CodeCoverageSettings.settings)
+
 
 lazy val it = project
   .enablePlugins(PlayScala)

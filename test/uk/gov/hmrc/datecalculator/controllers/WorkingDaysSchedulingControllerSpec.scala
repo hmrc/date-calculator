@@ -28,23 +28,24 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.guice.GuiceableModule
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.datecalculator.models.{AddWorkingDaysRequest, Region}
 import uk.gov.hmrc.datecalculator.services.WorkingDaysService.StartUpHook
 import uk.gov.hmrc.datecalculator.testsupport.stubs.{FakeApplicationProvider, GDSStub}
+import uk.gov.hmrc.datecalculator.testsupport.Givens.jsValueCanEqual
 import uk.gov.hmrc.http.test.ExternalWireMockSupport
-
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import java.time.{Clock, LocalDate, LocalTime, ZoneId}
 import scala.annotation.unused
 
 // the tests in this spec depend on a specific ordering of events - take care
 // when adding tests as changing one test may affect another one
-class WorkingDaysSchedulingControllerSpec extends AnyFreeSpecLike
-  with Matchers
-  with GuiceOneAppPerSuite
-  with ExternalWireMockSupport
-  with FakeApplicationProvider {
+class WorkingDaysSchedulingControllerSpec
+    extends AnyFreeSpecLike,
+      Matchers,
+      GuiceOneAppPerSuite,
+      ExternalWireMockSupport,
+      FakeApplicationProvider {
 
   // set it up so that the time now is always 08:58:25 and the scheduled daily refresh time is
   // 10:00. The scheduler should not run the first refresh job until 1 hour, 1 minute and 35 seconds
@@ -69,7 +70,10 @@ class WorkingDaysSchedulingControllerSpec extends AnyFreeSpecLike
       @Provides @Singleton @unused
       def clock(): Clock = {
         val europeLondonZoneId = ZoneId.of("Europe/London")
-        Clock.fixed(LocalDate.now(europeLondonZoneId).atTime(timeNow).atZone(europeLondonZoneId).toInstant, europeLondonZoneId)
+        Clock.fixed(
+          LocalDate.now(europeLondonZoneId).atTime(timeNow).atZone(europeLondonZoneId).toInstant,
+          europeLondonZoneId
+        )
       }
 
       @Provides @Singleton @unused
@@ -108,7 +112,7 @@ class WorkingDaysSchedulingControllerSpec extends AnyFreeSpecLike
 
       time.advance(1)
 
-      eventually(1.second){
+      eventually(1.second) {
         GDSStub.verifyGetBankHolidaysCalled(getBankHolidaysApiUrlPath, getBankHolidaysFromEmailAddress)
       }
     }
@@ -122,7 +126,8 @@ class WorkingDaysSchedulingControllerSpec extends AnyFreeSpecLike
     "should happen again once 24 hours have passed" in {
       val bankHolidaysResponse =
         GDSStub.getBankHolidaysApiResponseJsonString(
-          englandAndWalesBankHolidays = Set(LocalDate.of(2023, 10, 2), LocalDate.of(2023, 10, 4), LocalDate.of(2023, 12, 31))
+          englandAndWalesBankHolidays =
+            Set(LocalDate.of(2023, 10, 2), LocalDate.of(2023, 10, 4), LocalDate.of(2023, 12, 31))
         )
 
       GDSStub.stubGetBankHolidays(getBankHolidaysApiUrlPath, Right(bankHolidaysResponse))
@@ -138,7 +143,7 @@ class WorkingDaysSchedulingControllerSpec extends AnyFreeSpecLike
       // allow some time for the service to actually store the bank holidays
       eventually(1.second) {
         val addWorkingDaysRequest = AddWorkingDaysRequest(LocalDate.of(2023, 10, 3), 1, Set(Region.EnglandAndWales))
-        val result = controller.addWorkingDays(FakeRequest().withBody(addWorkingDaysRequest))
+        val result                = controller.addWorkingDays(FakeRequest().withBody(addWorkingDaysRequest))
 
         contentAsJson(result) shouldBe Json.parse("""{ "result": "2023-10-05" }""")
       }
@@ -147,29 +152,34 @@ class WorkingDaysSchedulingControllerSpec extends AnyFreeSpecLike
     "should happen again once another 24 hours have passed" in {
       val bankHolidaysResponse =
         GDSStub.getBankHolidaysApiResponseJsonString(
-          englandAndWalesBankHolidays = Set(LocalDate.of(2023, 10, 2), LocalDate.of(2023, 10, 5), LocalDate.of(2023, 12, 31))
+          englandAndWalesBankHolidays =
+            Set(LocalDate.of(2023, 10, 2), LocalDate.of(2023, 10, 5), LocalDate.of(2023, 12, 31))
         )
 
       GDSStub.stubGetBankHolidays(getBankHolidaysApiUrlPath, Right(bankHolidaysResponse))
 
       time.advance(24.hours)
 
-      eventually(1.second){
+      eventually(1.second) {
         GDSStub.verifyGetBankHolidaysCalled(getBankHolidaysApiUrlPath, getBankHolidaysFromEmailAddress)
       }
     }
 
     "should overwrite any existing bank holiday list if one already exists" in {
       eventually(1.second) {
-        val result1 = controller.addWorkingDays(FakeRequest().withBody(
-          AddWorkingDaysRequest(LocalDate.of(2023, 10, 3), 1, Set(Region.EnglandAndWales))
-        ))
+        val result1 = controller.addWorkingDays(
+          FakeRequest().withBody(
+            AddWorkingDaysRequest(LocalDate.of(2023, 10, 3), 1, Set(Region.EnglandAndWales))
+          )
+        )
         contentAsJson(result1) shouldBe Json.parse("""{ "result": "2023-10-04" }""")
       }
 
-      val result2 = controller.addWorkingDays(FakeRequest().withBody(
-        AddWorkingDaysRequest(LocalDate.of(2023, 10, 3), 2, Set(Region.EnglandAndWales))
-      ))
+      val result2 = controller.addWorkingDays(
+        FakeRequest().withBody(
+          AddWorkingDaysRequest(LocalDate.of(2023, 10, 3), 2, Set(Region.EnglandAndWales))
+        )
+      )
       contentAsJson(result2) shouldBe Json.parse("""{ "result": "2023-10-06" }""")
     }
 

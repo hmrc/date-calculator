@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.datecalculator.models
+package uk.gov.hmrc.datecalculator.testsupport
 
-import java.time.LocalDate
+import play.api.libs.json.{JsResult, JsValue}
 
-final case class BankHoliday(date: LocalDate)
+object Givens {
 
-object BankHoliday {
+  given jsValueCanEqual: CanEqual[JsValue, JsValue] = CanEqual.derived
 
-  given Ordering[BankHoliday] = Ordering.by(_.date)
+  given jsResultCanEqual[T]: CanEqual[JsResult[T], JsResult[T]] = CanEqual.derived
 
 }

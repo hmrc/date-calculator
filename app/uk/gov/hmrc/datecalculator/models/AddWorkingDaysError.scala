@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.datecalculator.models
 
-sealed trait AddWorkingDaysError
+sealed trait AddWorkingDaysError derives CanEqual
 
 object AddWorkingDaysError {
 

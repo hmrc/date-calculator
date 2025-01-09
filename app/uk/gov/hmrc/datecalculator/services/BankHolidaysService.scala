@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.datecalculator.services
 
-import cats.syntax.eq._
 import com.google.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
@@ -31,13 +30,13 @@ import java.time.format.DateTimeFormatter
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class BankHolidaysService @Inject() (bankHolidaysConnector: BankHolidaysConnector)(implicit ec: ExecutionContext) {
+class BankHolidaysService @Inject() (bankHolidaysConnector: BankHolidaysConnector)(using ExecutionContext) {
 
   private val logger: Logger = Logger(this.getClass)
 
-  def getBankHolidays()(implicit hc: HeaderCarrier): Future[BankHolidays] =
-    bankHolidaysConnector.getBankHolidays().map{ httpResponse =>
-      if (httpResponse.status === OK) {
+  def getBankHolidays()(using HeaderCarrier): Future[BankHolidays] =
+    bankHolidaysConnector.getBankHolidays().map { httpResponse =>
+      if httpResponse.status == OK then
         httpResponse.json.validate[GDSBankHolidays] match {
           case JsSuccess(gdsBankHolidays, _) =>
             toBankHolidays(gdsBankHolidays)
@@ -45,18 +44,17 @@ class BankHolidaysService @Inject() (bankHolidaysConnector: BankHolidaysConnecto
           case JsError(e) =>
             throw new Exception(s"Could not parse response from GDS get bank holidays API: ${e.toString()}")
         }
-      } else {
+      else
         logger.warn(s"Got http status ${httpResponse.status.toString} when calling the bank holiday API")
         throw UpstreamErrorResponse(
-          message    = "Could not retrieve bank holidays",
+          message = "Could not retrieve bank holidays",
           statusCode = httpResponse.status,
-          reportAs   = INTERNAL_SERVER_ERROR
+          reportAs = INTERNAL_SERVER_ERROR
         )
-      }
     }
 
   private def toBankHolidays(gdsBankHolidays: GDSBankHolidays): BankHolidays = {
-      def toBankHolidays(events: Seq[Event]): Set[BankHoliday] = events.map(event => BankHoliday(event.date)).toSet
+    def toBankHolidays(events: Seq[Event]): Set[BankHoliday] = events.map(event => BankHoliday(event.date)).toSet
 
     BankHolidays(
       toBankHolidays(gdsBankHolidays.`england-and-wales`.events),
@@ -74,19 +72,19 @@ object BankHolidaysService {
   private final case class RegionalResult(events: Seq[Event])
 
   private final case class GDSBankHolidays(
-      `england-and-wales`: RegionalResult,
-      scotland:            RegionalResult,
-      `northern-ireland`:  RegionalResult
+    `england-and-wales`: RegionalResult,
+    scotland:            RegionalResult,
+    `northern-ireland`:  RegionalResult
   )
 
-  private implicit val eventReads: Reads[Event] = {
+  private given Reads[Event] = {
     implicit val dateReads: Reads[LocalDate] = Reads.localDateReads(DateTimeFormatter.ISO_DATE)
     Json.reads
   }
 
-  private implicit val regionalResultReads: Reads[RegionalResult] = Json.reads
+  private given Reads[RegionalResult] = Json.reads
 
   @SuppressWarnings(Array("org.wartremover.warts.Any"))
-  private implicit val gdsBankHolidaysResponse: Reads[GDSBankHolidays] = Json.reads
+  private given Reads[GDSBankHolidays] = Json.reads
 
 }

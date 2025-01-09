@@ -21,15 +21,15 @@ import play.api.libs.json.{JsError, JsString, JsSuccess, Json, Reads}
 import java.time.LocalDate
 
 final case class AddWorkingDaysRequest(
-    date:                     LocalDate,
-    numberOfWorkingDaysToAdd: Int,
-    regions:                  Set[Region]
+  date:                     LocalDate,
+  numberOfWorkingDaysToAdd: Int,
+  regions:                  Set[Region]
 )
 
 object AddWorkingDaysRequest {
 
-  implicit val regionReads: Reads[Region] =
-    Reads{
+  given Reads[Region] =
+    Reads {
       case JsString("EW")  => JsSuccess(Region.EnglandAndWales)
       case JsString("SC")  => JsSuccess(Region.Scotland)
       case JsString("NI")  => JsSuccess(Region.NorthernIreland)
@@ -38,6 +38,6 @@ object AddWorkingDaysRequest {
     }
 
   @SuppressWarnings(Array("org.wartremover.warts.Any"))
-  implicit val reads: Reads[AddWorkingDaysRequest] = Json.reads
+  given Reads[AddWorkingDaysRequest] = Json.reads
 
 }

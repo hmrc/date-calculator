@@ -24,6 +24,6 @@ final case class AddWorkingDaysResponse(result: LocalDate)
 
 object AddWorkingDaysResponse {
 
-  implicit val format: OFormat[AddWorkingDaysResponse] = Json.format
+  given OFormat[AddWorkingDaysResponse] = Json.format
 
 }
