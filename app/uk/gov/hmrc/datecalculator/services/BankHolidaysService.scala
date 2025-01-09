@@ -34,7 +34,7 @@ class BankHolidaysService @Inject() (bankHolidaysConnector: BankHolidaysConnecto
 
   private val logger: Logger = Logger(this.getClass)
 
-  def getBankHolidays()(using hc: HeaderCarrier): Future[BankHolidays] =
+  def getBankHolidays()(using HeaderCarrier): Future[BankHolidays] =
     bankHolidaysConnector.getBankHolidays().map { httpResponse =>
       if httpResponse.status == OK then
         httpResponse.json.validate[GDSBankHolidays] match {

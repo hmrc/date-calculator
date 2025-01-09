@@ -177,7 +177,7 @@ class WorkingDaysService @Inject() (
     }
   }
 
-  private def getAndSetBankHolidays()(using hc: HeaderCarrier): Future[BankHolidays] =
+  private def getAndSetBankHolidays()(using HeaderCarrier): Future[BankHolidays] =
     bankHolidaysService.getBankHolidays().map { bankHolidays =>
       maybeBankHolidays.set(Some(bankHolidays))
       bankHolidays
