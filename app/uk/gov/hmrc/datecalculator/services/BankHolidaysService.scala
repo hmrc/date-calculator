@@ -78,7 +78,7 @@ object BankHolidaysService {
   )
 
   private given Reads[Event] = {
-    implicit val dateReads: Reads[LocalDate] = Reads.localDateReads(DateTimeFormatter.ISO_DATE)
+    given Reads[LocalDate] = Reads.localDateReads(DateTimeFormatter.ISO_DATE)
     Json.reads
   }
 

@@ -75,11 +75,15 @@ class WorkingDaysControllerSpec
         GDSStub.verifyGetBankHolidaysCalled(getBankHolidaysApiUrlPath, getBankHolidaysFromEmailAddress)
       }
 
+      // format: off
       /** use this set up in the tests below
         *
-        * Sep--22------23------24------25------26------27------28------29------30------31-Oct--01------02 Fri Sat Sun
-        * Mon Tue Wed Thu Fri Sat Sun Mon Tue ^ ^ earliest bank holiday latest bank holiday
+        * Sep--22------23------24------25------26------27------28------29------30------31-Oct--01------02
+        *     Fri     Sat     Sun     Mon     Tue     Wed     Thu     Fri    Sat      Sun     Mon     Tue
+        *                              ^                       ^
+        *                   earliest bank holiday        latest bank holiday
         */
+      // format: on
       val getBankHolidaysApiResponse =
         GDSStub.getBankHolidaysApiResponseJsonString(englandAndWalesBankHolidays =
           Set(LocalDate.of(2023, 9, 25), LocalDate.of(2023, 9, 28))
@@ -130,13 +134,25 @@ class WorkingDaysControllerSpec
 
     "return a 200 and return the correct result when" - {
 
-      /** Base tests on this setup:
-        *
-        * Sep--13----------14----------15--------16--------17--------18--------19--------20--------21--------22 Wed Thu
-        * Fri Sat Sun Mon Tue Wed Thu Fri ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ earliest bank holiday in all regions ^ ^ ^
-        * latest bank holiday in all regions ^ ^ ^ ^ ^ ^ ^ ^ bank holiday in Northern Ireland only ^ ^ ^ ^ ^ ^ bank
-        * holiday in England and Wales only ---------+ +---------- bank holiday in Scotland only
-        */
+      // format: off
+      /**
+       * Base tests on this setup:
+       *
+       * Sep--13----------14----------15--------16--------17--------18--------19--------20--------21--------22
+       *     Wed         Thu         Fri       Sat       Sun       Mon       Tue       Wed       Thu       Fri
+       *      ^                                                     ^         ^         ^                   ^
+       *      ^                                                     ^         ^         ^                   ^
+       *      ^                                                     ^         ^         ^                   ^
+       *  earliest bank holiday in all regions                      ^         ^         ^                latest bank holiday in all regions
+       *                                                            ^         ^         ^
+       *                                                            ^         ^         ^
+       *                                                            ^         ^        bank holiday in Northern Ireland only
+       *                                                            ^         ^
+       *                                                            ^         ^
+       *                                                            ^         ^
+       *            bank holiday in England and Wales only ---------+         +---------- bank holiday in Scotland only
+       */
+      // format: on
       val getBankHolidaysApiResponse =
         GDSStub.getBankHolidaysApiResponseJsonString(
           englandAndWalesBankHolidays =
