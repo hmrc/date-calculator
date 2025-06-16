@@ -1,4 +1,3 @@
-import uk.gov.hmrc.DefaultBuildSettings
 
 ThisBuild / majorVersion := 1
 ThisBuild / scalaVersion := "3.3.4"
@@ -28,12 +27,10 @@ lazy val microservice = Project("date-calculator", file("."))
   )
   .settings(WartRemoverSettings.wartRemoverSettings)
   .settings(SbtUpdatesSettings.sbtUpdatesSettings)
-  .settings(resolvers += Resolver.jcenterRepo)
   .settings(CodeCoverageSettings.settings)
 
 
 lazy val it = project
   .enablePlugins(PlayScala)
   .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
-  .settings(DefaultBuildSettings.itSettings())
   .settings(libraryDependencies ++= AppDependencies.itDependencies)
